@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oráculo do Véu - Jogo Místico de Cartas</title>
+  <meta name="description" content="Um jogo single-player místico de adivinhação de cartas com temas de amor, personalidade, signos e destino. Estética neon roxo, 3D e atmosfera imersiva.">
+  <style>
+    /* ==========================================================================
+       ORÁCULO DO VÉU - Standalone Single File Stylesheet
+       ========================================================================== */
+
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg-deep-violet: #0a0314;
+      --bg-altar-dark: #120626;
+      --neon-purple: #b026ff;
+      --neon-purple-glow: rgba(176, 38, 255, 0.4);
+      --accent-purple: #a855f7;
+      --pastel-lilac: #c084fc;
+      --pastel-lavender: #d8b4fe;
+      --soft-lavender: #e9d5ff;
+      --pastel-pink: #f472b6;
+      --soft-rose: #fda4af;
+      --soft-blue-violet: #818cf8;
+      --pearl-white: #f8fafc;
+      --silver-accent: #e2e8f0;
+      --silver-muted: #94a3b8;
+      --card-dark-bg: #160a2c;
+      --card-border-gold: #eab308;
+      
+      --glass-bg: rgba(22, 10, 44, 0.65);
+      --glass-border: rgba(192, 132, 252, 0.25);
+      --glass-glow: 0 8px 32px 0 rgba(168, 85, 247, 0.15);
+
+      --font-title: 'Cinzel Decorative', serif;
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-deep-violet);
+      font-family: var(--font-body);
+      color: var(--pearl-white);
+    }
+
+    #particles-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .altar-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      background: radial-gradient(circle at 50% 30%, #20083b 0%, #0c0318 70%, #05010a 100%);
+      overflow: hidden;
+    }
+
+    .altar-background::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80vw;
+      height: 60vh;
+      background: radial-gradient(ellipse at center, rgba(176, 38, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .altar-table-surface {
+      position: absolute;
+      bottom: -20%;
+      left: -10%;
+      width: 120%;
+      height: 70%;
+      background: radial-gradient(ellipse at 50% 50%, rgba(32, 12, 60, 0.8) 0%, rgba(10, 3, 20, 0.95) 75%);
+      transform: rotateX(45deg);
+      border-radius: 50%;
+      box-shadow: inset 0 0 100px rgba(176, 38, 255, 0.15), 0 0 80px rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(192, 132, 252, 0.1);
+    }
+
+    .hidden { display: none !important; }
+
+    .screen-splash {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 1.5rem;
+      background: radial-gradient(circle at center, rgba(24, 8, 48, 0.4) 0%, rgba(10, 3, 20, 0.85) 100%);
+      overflow-y: auto;
+    }
+
+    .splash-logo-container {
+      margin-bottom: 1.5rem;
+      animation: floatSlow 4s ease-in-out infinite;
+    }
+
+    .splash-eye-emblem {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1rem auto;
+      filter: drop-shadow(0 0 20px var(--neon-purple));
+    }
+
+    .splash-title {
+      font-family: var(--font-title);
+      font-size: 3.2rem;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--pastel-lavender) 40%, var(--pastel-lilac) 70%, var(--pastel-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 35px var(--neon-purple-glow);
+    }
+
+    .splash-subtitle {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      color: var(--pastel-lavender);
+      margin-top: 0.5rem;
+      font-style: italic;
+      letter-spacing: 1px;
+      max-width: 500px;
+      opacity: 0.9;
+    }
+
+    .splash-theme-selector {
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 750px;
+    }
+
+    .theme-selector-label {
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      color: var(--silver-accent);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.85rem;
+    }
+
+    .theme-options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .theme-card-option {
+      background: rgba(22, 10, 44, 0.7);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 0.75rem 0.5rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.3s ease;
+    }
+
+    .theme-card-option:hover {
+      background: rgba(176, 38, 255, 0.25);
+      border-color: var(--pastel-lilac);
+      transform: translateY(-3px);
+    }
+
+    .theme-card-option.selected {
+      background: linear-gradient(135deg, rgba(176, 38, 255, 0.4) 0%, rgba(244, 114, 182, 0.3) 100%);
+      border: 2px solid var(--pastel-pink);
+      box-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+      transform: scale(1.05);
+    }
+
+    .theme-icon { font-size: 1.5rem; }
+    .theme-title { font-size: 0.8rem; font-weight: 600; color: var(--pearl-white); text-align: center; }
+
+    .splash-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .screen-game {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hud-header {
+      height: 75px;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: var(--glass-glow);
+    }
+
+    .hud-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .hud-title {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      color: var(--pearl-white);
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px var(--neon-purple);
+    }
+
+    .hud-stats { display: flex; align-items: center; gap: 1.5rem; }
+    .stat-box { display: flex; flex-direction: column; align-items: center; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--silver-muted); }
+    .stat-value { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; color: var(--pastel-lilac); }
+
+    .theme-badge {
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      background: rgba(10, 3, 20, 0.6);
+      border: 1px solid var(--pastel-lilac);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--pearl-white);
+      letter-spacing: 0.5px;
+    }
+
+    .difficulty-badge {
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      background: rgba(176, 38, 255, 0.2);
+      border: 1px solid var(--pastel-lilac);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--pastel-lavender);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .hud-actions { display: flex; gap: 0.75rem; }
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--pearl-white);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(176, 38, 255, 0.3);
+      border-color: var(--pastel-lilac);
+      box-shadow: 0 0 15px var(--neon-purple-glow);
+      transform: translateY(-2px);
+    }
+
+    .game-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 2rem 2rem 2rem;
+      perspective: 1200px;
+    }
+
+    .vision-panel {
+      width: 100%;
+      max-width: 800px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1.25rem 2rem;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(192, 132, 252, 0.05);
+    }
+
+    .vision-question {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      color: var(--pearl-white);
+      letter-spacing: 1px;
+      margin-bottom: 0.6rem;
+      text-shadow: 0 0 10px rgba(192, 132, 252, 0.4);
+    }
+
+    .vision-hint-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 3, 20, 0.6);
+      border-radius: 10px;
+      padding: 0.75rem 1.25rem;
+      border: 1px solid rgba(192, 132, 252, 0.15);
+    }
+
+    .vision-hint-text { font-size: 1rem; color: var(--pastel-lavender); line-height: 1.4; text-align: left; }
+    .hint-prefix { font-weight: 700; color: var(--pastel-pink); margin-right: 0.4rem; }
+    .hint-controls { display: flex; align-items: center; gap: 1rem; }
+    .hint-counter { font-size: 0.8rem; color: var(--silver-muted); white-space: nowrap; }
+
+    .cards-altar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      width: 100%;
+      max-width: 1100px;
+      margin: 1.5rem 0;
+      transform-style: preserve-3d;
+    }
+
+    .card-slot {
+      position: relative;
+      width: 180px;
+      height: 270px;
+      perspective: 1000px;
+      animation: dealCard 0.6s cubic-bezier(0.25, 1, 0.5, 1) backwards;
+    }
+
+    .card-3d {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+      cursor: pointer;
+      border-radius: 12px;
+    }
+
+    .card-3d:hover { transform: translateY(-16px) rotateX(8deg) scale(1.04); }
+    .card-3d.selected { transform: translateY(-24px) scale(1.06); }
+    .card-3d.flipped { transform: rotateY(180deg); }
+
+    .card-inner { width: 100%; height: 100%; position: absolute; transform-style: preserve-3d; }
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.05);
+    }
+
+    .card-back {
+      background: var(--card-dark-bg);
+      border: 2px solid var(--pastel-lilac);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-3d:hover .card-back { border-color: var(--neon-purple); box-shadow: 0 0 25px var(--neon-purple-glow); }
+    .card-3d.selected .card-back { border-color: var(--pastel-pink); box-shadow: 0 0 35px rgba(244, 114, 182, 0.6); }
+
+    .card-front {
+      transform: rotateY(180deg);
+      background: linear-gradient(160deg, #1e0d38 0%, #0d041c 100%);
+      border: 2px solid var(--accent-color, var(--pastel-lilac));
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .card-rarity {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .card-rarity.comum { color: var(--silver-accent); }
+    .card-rarity.rara { color: #38bdf8; }
+    .card-rarity.épica { color: var(--pastel-pink); }
+    .card-rarity.lendária { color: #fbbf24; text-shadow: 0 0 8px #f59e0b; }
+    .card-category { font-size: 0.7rem; color: var(--silver-muted); text-transform: uppercase; }
+
+    .card-body { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .card-emblem-container { width: 90px; height: 90px; margin-bottom: 0.5rem; }
+    .card-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 8px var(--accent-color, var(--pastel-lilac))); }
+    .card-title { font-family: var(--font-heading); font-size: 0.95rem; color: var(--pearl-white); margin-bottom: 0.25rem; }
+    .card-desc { font-size: 0.68rem; color: var(--pastel-lavender); line-height: 1.25; opacity: 0.9; }
+    .card-footer { text-align: center; }
+    .card-symbol { font-size: 1.1rem; }
+
+    .card-3d.correct-target .card-front { border-color: #4ade80; box-shadow: 0 0 40px rgba(74, 222, 128, 0.7); }
+    .action-bar { display: flex; align-items: center; justify-content: center; gap: 1.5rem; width: 100%; }
+
+    .btn-primary {
+      padding: 0.85rem 2.5rem;
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--pearl-white);
+      background: linear-gradient(135deg, var(--neon-purple) 0%, #7e22ce 100%);
+      border: 1px solid var(--pastel-lilac);
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--neon-purple-glow);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 0 35px rgba(176, 38, 255, 0.7);
+      background: linear-gradient(135deg, #c084fc 0%, var(--neon-purple) 100%);
+    }
+
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; border-color: rgba(255, 255, 255, 0.1); }
+
+    .btn-secondary {
+      padding: 0.75rem 1.8rem;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--pastel-lavender);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(176, 38, 255, 0.2);
+      border-color: var(--pastel-lilac);
+      color: var(--pearl-white);
+    }
+
+    .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .glow-pulse { animation: pulseGlow 2s infinite alternate; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 100;
+      background: rgba(5, 1, 12, 0.85);
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-dark-bg);
+      border: 1px solid var(--pastel-lilac);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--neon-purple-glow);
+      position: relative;
+      animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(192, 132, 252, 0.2); padding-bottom: 1rem; }
+    .modal-title { font-family: var(--font-title); font-size: 1.5rem; color: var(--pearl-white); letter-spacing: 1.5px; }
+    .modal-close { background: none; border: none; color: var(--silver-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
+    .modal-close:hover { color: var(--pastel-pink); }
+    .modal-body { margin-bottom: 1.75rem; line-height: 1.6; color: var(--pastel-lavender); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; }
+
+    .result-content-grid { display: grid; grid-template-columns: 180px 1fr; gap: 1.75rem; align-items: center; margin-top: 1rem; }
+    .result-card-preview { width: 180px; height: 270px; }
+    .card-3d.large-preview { width: 100%; height: 100%; }
+    .result-details { display: flex; flex-direction: column; gap: 1rem; }
+    .result-meaning-box { background: rgba(10, 3, 20, 0.6); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 12px; padding: 1rem; }
+    .result-meaning-box h4 { font-family: var(--font-heading); color: var(--pastel-pink); margin-bottom: 0.4rem; font-size: 0.95rem; }
+    .result-breakdown { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.9rem; }
+    .breakdown-item { display: flex; justify-content: space-between; border-bottom: 1px stroke rgba(255, 255, 255, 0.05); padding-bottom: 0.2rem; }
+    .breakdown-item.highlight { color: var(--pastel-lilac); font-weight: 700; }
+    .text-success { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+    .text-defeat { color: var(--pastel-pink); text-shadow: 0 0 10px rgba(244, 114, 182, 0.5); }
+
+    .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .setting-label { font-size: 1rem; color: var(--pearl-white); }
+    .form-select, .form-toggle { background: rgba(10, 3, 20, 0.8); border: 1px solid var(--glass-border); color: var(--pastel-lavender); padding: 0.5rem 1rem; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; outline: none; }
+
+    @keyframes floatSlow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    @keyframes dealCard { 0% { opacity: 0; transform: translateY(-80px) rotate(-10deg) scale(0.8); } 100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); } }
+    @keyframes modalIn { 0% { opacity: 0; transform: scale(0.9) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes pulseGlow { 0% { box-shadow: 0 0 15px var(--neon-purple-glow); } 100% { box-shadow: 0 0 35px rgba(244, 114, 182, 0.8); } }
+
+    @media (max-width: 900px) {
+      .cards-altar { gap: 1rem; }
+      .card-slot { width: 140px; height: 210px; }
+      .card-emblem-container { width: 60px; height: 60px; }
+      .result-content-grid { grid-template-columns: 1fr; justify-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Altar Background & Particle Canvas Layer -->
+  <div class="altar-background">
+    <div class="altar-table-surface"></div>
+  </div>
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- SPLASH SCREEN -->
+  <div id="screen-splash" class="screen-splash">
+    <div class="splash-logo-container">
+      <svg viewBox="0 0 100 100" class="splash-eye-emblem">
+        <path d="M10,50 Q50,15 90,50 Q50,85 10,50 Z" fill="none" stroke="#c084fc" stroke-width="3" />
+        <circle cx="50" cy="50" r="18" fill="#1e0b36" stroke="#f472b6" stroke-width="2" />
+        <circle cx="50" cy="50" r="8" fill="#a855f7" />
+        <circle cx="46" cy="46" r="3" fill="#fff" />
+      </svg>
+      <h1 class="splash-title">ORÁCULO DO VÉU</h1>
+      <p class="splash-subtitle">"Nem toda resposta pode ser encontrada. Algumas precisam ser intuídas."</p>
+    </div>
+
+    <div class="splash-theme-selector">
+      <span class="theme-selector-label">Escolha o Tema do Oráculo:</span>
+      <div class="theme-options-grid">
+        <div class="theme-card-option selected" data-theme="místico">
+          <span class="theme-icon">🔮</span>
+          <span class="theme-title">Destino & Misticismo</span>
+        </div>
+        <div class="theme-card-option" data-theme="amor">
+          <span class="theme-icon">💖</span>
+          <span class="theme-title">Vida Amorosa</span>
+        </div>
+        <div class="theme-card-option" data-theme="personalidade">
+          <span class="theme-icon">🎭</span>
+          <span class="theme-title">Personalidade</span>
+        </div>
+        <div class="theme-card-option" data-theme="signos">
+          <span class="theme-icon">♈</span>
+          <span class="theme-title">Signos & Astrologia</span>
+        </div>
+        <div class="theme-card-option" data-theme="misto">
+          <span class="theme-icon">✨</span>
+          <span class="theme-title">Oráculo Misto</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="splash-menu">
+      <button id="btn-play" class="btn-primary glow-pulse">INICIAR REVELAÇÃO</button>
+      <button id="btn-how-to-play" class="btn-secondary">COMO JOGAR</button>
+      <button id="btn-settings" class="btn-secondary">CONFIGURAÇÕES</button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="screen-game" class="screen-game hidden">
+    <header class="hud-header">
+      <div class="hud-brand">
+        <span class="hud-title">ORÁCULO DO VÉU</span>
+      </div>
+
+      <div class="hud-stats">
+        <div id="hud-theme-badge" class="theme-badge">🔮 Destino & Misticismo</div>
+        <div class="stat-box">
+          <span class="stat-label">Pontuação</span>
+          <span id="hud-score" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Sequência</span>
+          <span id="hud-streak" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Rodada</span>
+          <span id="hud-round" class="stat-value">1</span>
+        </div>
+        <div id="hud-difficulty-badge" class="difficulty-badge">Fácil</div>
+      </div>
+
+      <div class="hud-actions">
+        <button id="btn-hud-sound" class="icon-btn" title="Alternar Som">🔊</button>
+        <button id="btn-hud-help" class="icon-btn" title="Ajuda / Regras">❓</button>
+        <button id="btn-hud-settings" class="icon-btn" title="Configurações">⚙️</button>
+      </div>
+    </header>
+
+    <main class="game-viewport">
+      <section class="vision-panel">
+        <h2 id="vision-question" class="vision-question">Qual elemento está escondido nesta visão?</h2>
+        <div class="vision-hint-box">
+          <div id="vision-hint-text" class="vision-hint-text">
+            <span class="hint-prefix">Pista 1:</span> Concentre sua intuição nas cartas dispostas sobre o altar.
+          </div>
+          <div class="hint-controls">
+            <span id="hint-counter" class="hint-counter">Pista 1 de 3</span>
+            <button id="btn-extra-hint" class="btn-secondary">👁️ Nova Pista (-20 pts)</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="cards-altar" class="cards-altar"></section>
+
+      <footer class="action-bar">
+        <button id="btn-reveal" class="btn-primary" disabled>REVELAR</button>
+      </footer>
+    </main>
+  </div>
+
+  <!-- MODAL HOW TO PLAY -->
+  <div id="modal-how-to-play" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Como Jogar</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>1. Escolha o Tema:</strong> Selecione entre <em>Vida Amorosa</em>, <em>Personalidade</em>, <em>Signos do Zodíaco</em> ou <em>Destino Místico</em>.</p>
+        <br>
+        <p><strong>2. A Visão:</strong> A cada rodada, o Oráculo gera uma questão temática e dispõe as cartas no altar.</p>
+        <br>
+        <p><strong>3. As Pistas:</strong> Analise as pistas místicas. Solicite <em>Nova Pista</em> se precisar de mais orientação (-20 pts por pista extra).</p>
+        <br>
+        <p><strong>4. Escolha & Revelação:</strong> Passe o mouse para sentir as energias, clique para escolher e pressione <strong>REVELAR</strong> para virar em 3D.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SETTINGS -->
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Configurações</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-row">
+          <label class="setting-label" for="select-theme-setting">Tema Ativo do Oráculo:</label>
+          <select id="select-theme-setting" class="form-select">
+            <option value="místico">🔮 Destino & Esoterismo</option>
+            <option value="amor">💖 Vida Amorosa & Relações</option>
+            <option value="personalidade">🎭 Personalidade & Alma</option>
+            <option value="signos">♈ Signos & Astrologia</option>
+            <option value="misto">✨ Oráculo Livre (Misto)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label" for="select-difficulty">Nível de Dificuldade:</label>
+          <select id="select-difficulty" class="form-select">
+            <option value="facil">Fácil (3 Cartas)</option>
+            <option value="medio">Médio (4 Cartas)</option>
+            <option value="dificil">Difícil (5 Cartas)</option>
+            <option value="oraculo">Oráculo (6 Cartas - Extremo)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label" for="toggle-sfx">Efeitos Sonoros (SFX):</label>
+          <input type="checkbox" id="toggle-sfx" class="form-toggle" checked>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label" for="toggle-ambient">Música Ambiente Mística:</label>
+          <input type="checkbox" id="toggle-ambient" class="form-toggle" checked>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label" for="select-particles">Densidade de Partículas:</label>
+          <select id="select-particles" class="form-select">
+            <option value="0">Baixa</option>
+            <option value="1" selected>Normal</option>
+            <option value="2">Alta (Especial)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary modal-close">Salvar & Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL RESULT -->
+  <div id="modal-result" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="result-header-text" class="modal-title">A Carta foi Revelada</h3>
+      </div>
+      <div class="modal-body">
+        <p id="result-message-text">Sua intuição guiou seus passos com precisão.</p>
+        
+        <div class="result-content-grid">
+          <div id="result-card-preview" class="result-card-preview"></div>
+          <div class="result-details">
+            <div id="result-card-meaning" class="result-meaning-box"></div>
+            <div id="result-points-breakdown" class="result-breakdown"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-return-menu" class="btn-secondary">Menu Principal</button>
+        <button id="btn-next-vision" class="btn-primary glow-pulse">Próxima Visão</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       EMBEDDED GAME LOGIC SCRIPTS
+       ========================================================================== -->
+  <script src="js/cards_data.js"></script>
+  <script src="js/audio_engine.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/game_logic.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      particleSystem = new ParticleEngine('particles-canvas');
+      gameEngine.initUI();
+    });
+  </script>
+</body>
+</html>
